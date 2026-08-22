@@ -10,11 +10,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.hermex.android"
+        applicationId = "com.hermex.android.v2"
         minSdk = 34
         targetSdk = 34
-        versionCode = 200
-        versionName = "0.1.0"
+        versionCode = 201
+        versionName = "0.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

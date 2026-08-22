@@ -10,8 +10,9 @@ doesn't touch the shipping app.
 ## What's different vs. HermexAndroid
 
 V2 keeps the same fundamentals as the production app — same gateway JSON-RPC/WebSocket backend
-(the Hermes Dashboard on port `9119`), same `com.hermex.android` app id, same notification/cron
-layer — and layers on the WebUI-influenced UI:
+(the Hermes Dashboard on port `9119`), same notification/cron layer — but uses a **distinct app id
+(`com.hermex.android.v2`) so it installs *alongside* the production app** (they can coexist and be
+compared; `applicationId` differs, Kotlin package/`namespace` stays `com.hermex.android`).
 
 - **3-bars hamburger in the chat top bar** → opens a slide-over drawer with the session list +
   menus (New session, Cron, Skills, Config, Settings) *inside* the conversation, so you never
