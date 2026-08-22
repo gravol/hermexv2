@@ -42,6 +42,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
@@ -92,6 +96,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.hermex.android.feature.settings.SettingsRepository
+import com.hermex.android.feature.sessions.DrawerSessionRow
+import com.hermex.android.feature.sessions.SessionsViewModel
 import com.hermex.android.ui.theme.LocalUiSurfaces
 import com.hermex.core.network.DashboardApiClient
 import com.hermex.core.network.DebugLog
@@ -113,6 +119,11 @@ fun ChatScreen(
     sessionTitle: String?,
     onBack: () -> Unit,
     viewModel: ChatViewModelContract,
+    onOpenSession: (String, String?) -> Unit = { _, _ -> },
+    onOpenCron: () -> Unit = {},
+    onOpenSkills: () -> Unit = {},
+    onOpenConfig: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
     LaunchedEffect(sessionId) {
         viewModel.init(sessionId, sessionTitle)
@@ -126,6 +137,9 @@ fun ChatScreen(
     }
 
     val state = viewModel.uiState
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val sessionsVM: SessionsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val sessionsState by sessionsVM.uiState.collectAsState()
     val listState = rememberLazyListState()
     var composerText by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
@@ -563,6 +577,96 @@ fun ChatScreen(
 
     // Track composer focus separately (for other uses if needed)
 
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp)) {
+                        Text(
+                            text = "Hermex",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = "${sessionsState.sessions.size} sessions",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    ListItem(
+                        headlineContent = { Text("New session") },
+                        leadingContent = { Icon(Icons.Filled.Add, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            if (!sessionsState.isCreating) {
+                                sessionsVM.createSession { sid ->
+                                    if (sid != null) {
+                                        scope.launch { drawerState.close() }
+                                        onOpenSession(sid, "New session")
+                                    }
+                                }
+                            }
+                        },
+                    )
+                    HorizontalDivider()
+                    if (sessionsState.sessions.isNotEmpty()) {
+                        Column {
+                            sessionsState.sessions.forEach { session ->
+                                DrawerSessionRow(
+                                    session = session,
+                                    pinned = false,
+                                    onClick = {
+                                        scope.launch { drawerState.close() }
+                                        onOpenSession(session.id, session.title)
+                                    },
+                                    onTogglePin = {},
+                                    onDeleted = {},
+                                    isActive = false,
+                                )
+                            }
+                        }
+                    }
+                    HorizontalDivider()
+                    ListItem(
+                        headlineContent = { Text("Cron") },
+                        leadingContent = { Icon(Icons.Filled.Schedule, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            scope.launch { drawerState.close() }
+                            onOpenCron()
+                        },
+                    )
+                    ListItem(
+                        headlineContent = { Text("Skills") },
+                        leadingContent = { Icon(Icons.Outlined.Handyman, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            scope.launch { drawerState.close() }
+                            onOpenSkills()
+                        },
+                    )
+                    ListItem(
+                        headlineContent = { Text("Config") },
+                        leadingContent = { Icon(Icons.Filled.Settings, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            scope.launch { drawerState.close() }
+                            onOpenConfig()
+                        },
+                    )
+                    ListItem(
+                        headlineContent = { Text("Settings") },
+                        leadingContent = { Icon(Icons.Filled.Settings, contentDescription = null) },
+                        modifier = Modifier.clickable {
+                            scope.launch { drawerState.close() }
+                            onOpenSettings()
+                        },
+                    )
+                }
+            }
+        },
+    ) {
     Scaffold(
         modifier = Modifier.imePadding(),
         topBar = {
@@ -655,6 +759,11 @@ fun ChatScreen(
                 // v0.1.96: quick tool-call visibility toggle — wrench icon,
                 // tinted when shown, dimmed when hidden.
                 actions = {
+                    IconButton(
+                        onClick = { scope.launch { drawerState.open() } },
+                    ) {
+                        Icon(Icons.Filled.Menu, contentDescription = "Sessions & menus")
+                    }
                     IconButton(
                         onClick = { scope.launch { settingsRepo.setShowToolCalls(!showToolCalls) } },
                     ) {
@@ -1329,6 +1438,7 @@ fun ChatScreen(
                 }
             }
         }
+    }
     }
 }
 

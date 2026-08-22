@@ -495,7 +495,7 @@ fun SessionsScreen(
 }
 
 @Composable
-private fun SectionHeader(title: String) {
+internal fun SectionHeader(title: String) {
     Text(
         text = title,
         style = MaterialTheme.typography.labelMedium,
@@ -633,7 +633,7 @@ private fun SessionRow(
 }
 
 @Composable
-private fun DrawerSessionRow(
+internal fun DrawerSessionRow(
     session: SessionSummary,
     pinned: Boolean,
     onClick: () -> Unit,
